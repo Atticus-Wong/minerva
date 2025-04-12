@@ -1,3 +1,6 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -8,9 +11,25 @@ import {
 } from "@/components/ui/card"
 
 export default function Section2() {
-  return(
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    // Delay the animation to start after Section1 animation (which takes 1000ms)
+    const timer = setTimeout(() => {
+      setIsVisible(true);
+    }, 500); // 1200ms = Section1's 1000ms + 200ms buffer
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
     <div className="justify-center flex items-center">
-      <div className="max-w-[1440px] flex items-center py-10 justify-center gap-3">
+      <div
+        className={`max-w-[1440px] flex items-center py-10 justify-center gap-3 ${isVisible
+          ? "animate-in fade-in slide-in-from-bottom-2 duration-1000 ease-in-out"
+          : "opacity-0"
+          }`}
+      >
         <div>
           <Card className="w-96 h-80">
             <CardHeader>

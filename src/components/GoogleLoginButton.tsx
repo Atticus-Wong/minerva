@@ -1,16 +1,25 @@
 import { Button } from "@/components/ui/button"; // Adjust the import path based on your project structure
-
+import { createClient } from "@/utils/supabase/client";
 export function GoogleLoginButton() {
+  const handleSignIn = async () => {
+    const supabase = createClient();
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+  }
   return (
     <Button
       variant="outline" // Use the "outline" variant for a clean look
-      className="w-64 gap-2 h-24" // Full width and add spacing between icon and text
+      className="w-full gap-2 h-12" // Full width and add spacing between icon and text
       onClick={() => {
         // Add your Google login logic here
+        handleSignIn();
         console.log("Logging in with Google...");
       }}
     >
-      {/* Google Icon (you can use an SVG or an icon library like Lucide or React Icons) */}
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 48 48"
@@ -34,7 +43,7 @@ export function GoogleLoginButton() {
           d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 01-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"
         />
       </svg>
-      <span>Log in with Google</span>
+      <span>Sign in with Google</span>
     </Button>
   );
 }
