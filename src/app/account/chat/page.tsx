@@ -146,28 +146,37 @@ export default function ChatPage() {
   return (
     <div className="flex flex-col h-screen bg-background text-foreground max-w-[1440px] mx-auto">
       {/* Message Display Area */}
-      <div className="flex-grow overflow-y-auto p-4 md:p-6 space-y-4">
-        {messages.map((msg, index) => (
-          <div
-            key={index}
-            className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-          >
-            <div
-              className={`max-w-[75%] p-3 rounded-lg shadow-sm ${msg.role === "user"
-                ? "bg-primary text-primary-foreground"
-                : "bg-secondary text-secondary-foreground"
-                } ${
-                // Add blinking cursor effect to the message being streamed
-                index === streamingMessageIndex ? 'after:content-["▋"] after:ml-1 after:animate-pulse' : ''
-                }`}
-            >
-              <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-            </div>
+      <div className="flex-grow overflow-y-auto p-4 md:p-6">
+        {messages.length === 0 ? (
+          <div className="flex h-full items-center justify-center">
+            <p className="text-muted-foreground">
+              Start chatting with Minerva!
+            </p>
           </div>
-        ))}
-        {/* Remove the separate Loader section, loading is handled by streaming state */}
-        {/* Invisible element to scroll to */}
-        <div ref={messagesEndRef} />
+        ) : (
+          <div className="space-y-4">
+            {messages.map((msg, index) => (
+              <div
+                key={index}
+                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+              >
+                <div
+                  className={`max-w-[75%] p-3 rounded-lg shadow-sm ${msg.role === "user"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-secondary text-secondary-foreground"
+                    } ${
+                    // Add blinking cursor effect to the message being streamed
+                    index === streamingMessageIndex ? 'after:content-["▋"] after:ml-1 after:animate-pulse' : ''
+                    }`}
+                >
+                  <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                </div>
+              </div>
+            ))}
+            {/* Invisible element to scroll to */}
+            <div ref={messagesEndRef} />
+          </div>
+        )}
       </div>
 
       {/* Input Area */}

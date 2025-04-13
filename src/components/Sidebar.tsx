@@ -1,68 +1,193 @@
 'use client';
 import Image from 'next/image';
-import { useState } from 'react'
+import { useState, useEffect } from 'react';
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
   SidebarHeader,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar"
-import { Home, User, Settings } from "lucide-react"
-import Link from "next/link"
-import ThemeToggle from "./ThemeToggle"
+} from "@/components/ui/sidebar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Home, User, Settings, LogOut, PanelLeft, MessageSquare, LayoutDashboard, BookOpenText } from "lucide-react";
+import Link from "next/link";
+import ThemeToggle, { useTheme } from "./ThemeToggle";
+import { createClient } from "@/utils/supabase/client";
+import { useRouter } from "next/navigation";
+import minervaWhite from '../../public/minerva_white.png';
+import minervaBlack from '../../public/minerva_black(2).png';
+
 export function AccountSidebar() {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const supabase = createClient();
+  const { isDarkMode } = useTheme();
+
+  useEffect(() => {
+    const checkUser = async () => {
+      setLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user || null);
+      setLoading(false);
+    };
+
+    checkUser();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user ?? null);
+        setLoading(false);
+      }
+    );
+
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
+  }, [supabase]);
+
+  const handleSignOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (!error) {
+      router.push('/');
+      router.refresh();
+    } else {
+      console.error("Sign out error:", error);
+    }
+  };
+
+  const getUserInitials = () => {
+    if (!user) return "?";
+
+    const name = user.user_metadata?.full_name || user.email || "";
+    if (!name) return "?";
+
+    if (name.includes('@')) {
+      return name.charAt(0).toUpperCase();
+    }
+
+    const nameParts = name.split(' ').filter(Boolean);
+    if (nameParts.length === 0) return "?";
+    if (nameParts.length === 1) return nameParts[0].charAt(0).toUpperCase();
+    return (nameParts[0].charAt(0) + nameParts[nameParts.length - 1].charAt(0)).toUpperCase();
+  };
 
   return (
-      <Sidebar 
-        className={`transition-all duration-100 overflow-hidden scrollbar-none ${isExpanded ? 'w-64' : 'w-16'}`}
-        onMouseEnter={() => setIsExpanded(true)}
-        onMouseLeave={() => setIsExpanded(false)}
-      >
-        <SidebarHeader>
-          <div className={`p-4 flex items-center ${isExpanded ? 'justify-between' : 'justify-center'}`}>
-            <h2 className={`text-xl font-bold overflow-hidden transition-all ${isExpanded ? 'opacity-100' : 'opacity-0 w-0'}`}>
-              Minerva
-            </h2>
-            <Image 
-              src='/lichess.png'
-              alt="logo"
-              width={32}
-              height={32}
-              className="min-w-[32px]"
+    <Sidebar
+      className={`transition-all duration-100 overflow-hidden scrollbar-none ${isExpanded ? 'w-64' : 'w-16'} border-r`}
+    >
+      <SidebarHeader>
+        <div className={`p-2 flex items-center ${isExpanded ? 'justify-between' : 'justify-center'}`}>
+          <Link href="/" className={`overflow-hidden transition-all ${isExpanded ? 'opacity-100 ml-2' : 'opacity-0 w-0'}`}>
+            <Image
+              src={isDarkMode ? minervaWhite : minervaBlack}
+              alt="Minerva Logo"
+              width={24}
+              height={24}
+              className="h-6"
             />
+          </Link>
+          {isExpanded && <p className='font-bold'>Minerva</p>}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => setIsExpanded(!isExpanded)}
+          >
+            <PanelLeft className="h-5 w-5" />
+            <span className="sr-only">Toggle Sidebar</span>
+          </Button>
+        </div>
+      </SidebarHeader>
+
+      <SidebarContent className="flex-grow">
+        <SidebarGroup>
+          <nav className="space-y-1 p-2">
+            <Link href="/account" className={`flex items-center rounded-md text-sm hover:bg-secondary ${isExpanded ? 'space-x-3 p-2' : 'w-8 h-8 justify-center p-0'}`}>
+              <LayoutDashboard className="h-5 w-5 min-w-[20px]" />
+              <span className={`transition-opacity duration-100 ${isExpanded ? 'opacity-100 delay-75' : 'opacity-0 w-0'}`}>Dashboard</span>
+            </Link>
+            <Link href="/account/session" className={`flex items-center rounded-md text-sm hover:bg-secondary ${isExpanded ? 'space-x-3 p-2' : 'w-8 h-8 justify-center p-0'}`}>
+              <BookOpenText className="h-5 w-5 min-w-[20px]" />
+              <span className={`transition-opacity duration-100 ${isExpanded ? 'opacity-100 delay-75' : 'opacity-0 w-0'}`}>Sessions</span>
+            </Link>
+            <Link href="/account/chat" className={`flex items-center rounded-md text-sm hover:bg-secondary ${isExpanded ? 'space-x-3 p-2' : 'w-8 h-8 justify-center p-0'}`}>
+              <MessageSquare className="h-5 w-5 min-w-[20px]" />
+              <span className={`transition-opacity duration-100 ${isExpanded ? 'opacity-100 delay-75' : 'opacity-0 w-0'}`}>Talk to Minerva</span>
+            </Link>
+            <Link href="/settings" className={`flex items-center rounded-md text-sm hover:bg-secondary ${isExpanded ? 'space-x-3 p-2' : 'w-8 h-8 justify-center p-0'}`}>
+              <Settings className="h-5 w-5 min-w-[20px]" />
+              <span className={`transition-opacity duration-100 ${isExpanded ? 'opacity-100 delay-75' : 'opacity-0 w-0'}`}>Settings</span>
+            </Link>
+          </nav>
+        </SidebarGroup>
+      </SidebarContent>
+
+      <SidebarFooter className="mt-auto border-t">
+        <div className={`flex items-center p-3 ${isExpanded ? 'gap-3' : 'justify-center'}`}>
+          <ThemeToggle />
+          <span className={`text-sm transition-opacity duration-100 ${isExpanded ? 'opacity-100 delay-75' : 'opacity-0 w-0'}`}>
+            Theme
+          </span>
+        </div>
+
+        {!loading && user && (
+          <div className={`p-2 flex items-center ${!isExpanded ? 'flex justify-center pl-4' : ''}`}>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className={`flex items-center p-2 ${isExpanded
+                    ? 'w-full justify-start gap-4'
+                    : 'justify-center h-10 w-7 rounded-full'
+                    }`}
+                >
+                  <Avatar className={`h-7 w-7`}>
+                    <AvatarImage
+                      src={user.user_metadata?.avatar_url || user.user_metadata?.picture}
+                      alt={user.user_metadata?.full_name || user.email}
+                    />
+                    <AvatarFallback className="text-xs">{getUserInitials()}</AvatarFallback>
+                  </Avatar>
+                  <span className={`text-sm font-medium truncate transition-opacity duration-100 ${isExpanded ? 'opacity-100 delay-75' : 'opacity-0 w-0'}`}>
+                    {user.user_metadata?.full_name || user.email}
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="right" align="start" className="mb-2 w-56">
+                <DropdownMenuItem disabled className="text-xs text-muted-foreground">
+                  {user.email}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/account" className="w-full cursor-pointer">
+                    Dashboard
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/account/chat" className="w-full cursor-pointer">
+                    Talk to Minerva
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-100 dark:focus:bg-red-900/50">
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Log out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-        </SidebarHeader>
-        
-        <SidebarContent>
-          <SidebarGroup>
-            <nav className="space-y-2 p-2">
-              <Link href="/" className="flex items-center space-x-2 p-2 hover:bg-secondary rounded-md">
-                <Home className="h-5 w-5 min-w-[20px]" />
-                <span className={`transition-all ${isExpanded ? 'opacity-100' : 'opacity-0 w-0'}`}>Home</span>
-              </Link>
-              <Link href="/account" className="flex items-center space-x-2 p-2 hover:bg-secondary rounded-md">
-                <User className="h-5 w-5 min-w-[20px]" />
-                <span className={`transition-all ${isExpanded ? 'opacity-100' : 'opacity-0 w-0'}`}>Profile</span>
-              </Link>
-              <Link href="/settings" className="flex items-center space-x-2 p-2 hover:bg-secondary rounded-md">
-                <Settings className="h-5 w-5 min-w-[20px]" />
-                <span className={`transition-all ${isExpanded ? 'opacity-100' : 'opacity-0 w-0'}`}>Settings</span>
-              </Link>
-            </nav>
-          </SidebarGroup>
-        </SidebarContent>
-        
-        <SidebarFooter>
-          <div className="flex items-center gap-3 p-4">
-            <ThemeToggle />
-            {/* Conditionally render text based on expanded state */}
-            {isExpanded && <p className="transition-all">Theme Mode</p>}
-          </div>
-        </SidebarFooter>
-      </Sidebar>
-  )
+        )}
+      </SidebarFooter>
+    </Sidebar>
+  );
 }

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Work_Sans } from "next/font/google";
 import "./globals.css";
-import { Navbar } from "@/components/navbar";
 import { ThemeProvider } from "@/components/ThemeToggle";
 import { ThemeScript } from "@/components/ThemeScript";
+import LayoutWrapper from "@/components/layoutWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,8 +39,7 @@ export default function RootLayout({
         className={`${workSans.variable} ${workSans.variable} antialiased work-sans-text`}
       >
         <ThemeProvider>
-          <Navbar />
-          {children}
+            {children}
         </ThemeProvider>
       </body>
     </html>
